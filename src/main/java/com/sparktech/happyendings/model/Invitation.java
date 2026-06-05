@@ -10,6 +10,8 @@ public class Invitation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private Long invitationTemplateId;
+
     @OneToMany(mappedBy = "invitation")
     private List<InvitationUser> couple;
 
@@ -37,6 +39,14 @@ public class Invitation {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getInvitationTemplateId() {
+        return invitationTemplateId;
+    }
+
+    public void setInvitationTemplateId(Long invitationTemplateId) {
+        this.invitationTemplateId = invitationTemplateId;
     }
 
     public List<InvitationUser> getCouple() {
