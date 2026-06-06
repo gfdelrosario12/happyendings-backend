@@ -14,7 +14,7 @@ public class ProgramSegment {
     private String title;
     private String description;
     private LocalTime startTime;
-    private Integer duration; // in minutes
+    private Integer duration;
     private int orderIndex;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
