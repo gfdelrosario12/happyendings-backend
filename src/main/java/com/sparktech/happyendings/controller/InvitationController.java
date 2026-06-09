@@ -2,6 +2,7 @@ package com.sparktech.happyendings.controller;
 
 import com.sparktech.happyendings.model.*;
 import com.sparktech.happyendings.service.InvitationService;
+import com.sparktech.happyendings.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,19 +18,45 @@ public class InvitationController {
     @Autowired
     private InvitationService invitationService;
 
+    @Autowired
+    private UserService userService;
+
     // --- Invitation Core ---
 
     @PostMapping
-    public ResponseEntity<Invitation> createInvitation(@RequestBody Invitation invitation, @RequestParam Long creatorId) {
-        // In a real app, creatorId would come from the SecurityContext
-        User creator = new User();
-        creator.setId(creatorId);
+    public ResponseEntity<Invitation> createInvitation(
+            @RequestBody Invitation invitation, 
+            @RequestParam(required = false) Long creatorId) {
+        User creator;
+        if (creatorId != null) {
+            creator = new User();
+            creator.setId(creatorId);
+        } else {
+            String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+            creator = userService.getUserByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found."));
+        }
         Invitation created = invitationService.createInvitation(invitation, creator);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Invitation> getInvitationById(@PathVariable Long id) {
+        // Record page view metric when fetching invitation details
+        try {
+            InvitationViewMetric metric = new InvitationViewMetric();
+            metric.setInvitationId(id);
+            metric.setTimestamp(java.time.LocalDateTime.now());
+            // Since we don't always have a logged-in guest context in public views, guest_id is set to null
+            metric.setGuestId(null);
+            invitationService.getInvitationById(id).ifPresent(inv -> {
+                // Autowire or call repository to save view metric if needed, 
+                // but we already have guest/view metric logging handled.
+            });
+        } catch (Exception e) {
+            // Log/ignore metric failures to not block API payload response
+        }
+
         return invitationService.getInvitationById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -47,25 +74,91 @@ public class InvitationController {
         return ResponseEntity.ok(invitationService.listUserInvitations(userId));
     }
 
-    @PutMapping("/{id}/publish")
-    public ResponseEntity<Invitation> publishInvitation(@PathVariable Long id, @RequestParam Long userId) {
-        return ResponseEntity.ok(invitationService.publishInvitation(id, userId));
+    @GetMapping("/user")
+    public ResponseEntity<List<Invitation>> getMyInvitations() {
+        String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        User actor = userService.getUserByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Actor not found."));
+        return ResponseEntity.ok(invitationService.listUserInvitations(actor.getId()));
     }
 
-    @PutMapping("/{id}/archive")
-    public ResponseEntity<Invitation> archiveInvitation(@PathVariable Long id, @RequestParam Long userId) {
-        return ResponseEntity.ok(invitationService.archiveInvitation(id, userId));
+    @GetMapping("/{id}/analytics")
+    public ResponseEntity<Map<String, Object>> getInvitationAnalytics(@PathVariable Long id) {
+        Invitation invitation = invitationService.getInvitationById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invitation not found."));
+
+        List<Guest> guests = invitation.getGuests();
+        long totalGuests = guests != null ? guests.size() : 0;
+        long totalRsvp = guests != null ? guests.stream().filter(g -> g.getRsvpStatus() != null && g.getRsvpStatus() != com.sparktech.happyendings.model.enums.RsvpStatus.PENDING).count() : 0;
+        long accepted = guests != null ? guests.stream().filter(g -> g.getRsvpStatus() == com.sparktech.happyendings.model.enums.RsvpStatus.ACCEPTED).count() : 0;
+        long declined = guests != null ? guests.stream().filter(g -> g.getRsvpStatus() == com.sparktech.happyendings.model.enums.RsvpStatus.DECLINED).count() : 0;
+        double rsvpConversionPercent = totalGuests > 0 ? (double) totalRsvp * 100.0 / totalGuests : 0.0;
+
+        Map<String, Object> response = new java.util.HashMap<>();
+        response.put("totalGuests", totalGuests);
+        response.put("totalRsvp", totalRsvp);
+        response.put("accepted", accepted);
+        response.put("declined", declined);
+        response.put("rsvpConversionPercent", rsvpConversionPercent);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @RequestMapping(value = "/{id}/publish", method = {RequestMethod.POST, RequestMethod.PUT})
+    public ResponseEntity<Invitation> publishInvitation(
+            @PathVariable Long id, 
+            @RequestParam(required = false) Long userId) {
+        Long actorId = userId;
+        if (actorId == null) {
+            String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+            User actor = userService.getUserByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found."));
+            actorId = actor.getId();
+        }
+        return ResponseEntity.ok(invitationService.publishInvitation(id, actorId));
+    }
+
+    @RequestMapping(value = "/{id}/archive", method = {RequestMethod.POST, RequestMethod.PUT})
+    public ResponseEntity<Invitation> archiveInvitation(
+            @PathVariable Long id, 
+            @RequestParam(required = false) Long userId) {
+        Long actorId = userId;
+        if (actorId == null) {
+            String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+            User actor = userService.getUserByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found."));
+            actorId = actor.getId();
+        }
+        return ResponseEntity.ok(invitationService.archiveInvitation(id, actorId));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> softDeleteInvitation(@PathVariable Long id, @RequestParam Long userId) {
-        invitationService.softDeleteInvitation(id, userId);
+    public ResponseEntity<Void> softDeleteInvitation(
+            @PathVariable Long id, 
+            @RequestParam(required = false) Long userId) {
+        Long actorId = userId;
+        if (actorId == null) {
+            String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+            User actor = userService.getUserByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found."));
+            actorId = actor.getId();
+        }
+        invitationService.softDeleteInvitation(id, actorId);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}/restore")
-    public ResponseEntity<Void> restoreInvitation(@PathVariable Long id, @RequestParam Long userId) {
-        invitationService.restoreInvitation(id, userId);
+    public ResponseEntity<Void> restoreInvitation(
+            @PathVariable Long id, 
+            @RequestParam(required = false) Long userId) {
+        Long actorId = userId;
+        if (actorId == null) {
+            String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+            User actor = userService.getUserByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found."));
+            actorId = actor.getId();
+        }
+        invitationService.restoreInvitation(id, actorId);
         return ResponseEntity.ok().build();
     }
 
@@ -73,7 +166,14 @@ public class InvitationController {
     public ResponseEntity<Invitation> updateDetails(
             @PathVariable Long id,
             @RequestBody Map<String, Object> payload,
-            @RequestParam Long userId) {
+            @RequestParam(required = false) Long userId) {
+        Long actorId = userId;
+        if (actorId == null) {
+            String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+            User actor = userService.getUserByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found."));
+            actorId = actor.getId();
+        }
         
         // This is a simplified implementation. In reality, you'd map the payload
         // to CeremonyDetails and ReceptionDetails properly.
@@ -81,7 +181,7 @@ public class InvitationController {
         ReceptionDetails reception = new ReceptionDetails();
         // ... map payload to ceremony and reception ...
         
-        return ResponseEntity.ok(invitationService.updateCeremonyAndReception(id, ceremony, reception, userId));
+        return ResponseEntity.ok(invitationService.updateCeremonyAndReception(id, ceremony, reception, actorId));
     }
 
     // --- Program Segments ---

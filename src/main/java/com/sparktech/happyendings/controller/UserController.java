@@ -19,6 +19,9 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private com.sparktech.happyendings.service.ActionLogService actionLogService;
+
     @GetMapping
     public List<UserDto> getAllUsers() {
         return userService.getAllUsers().stream()
@@ -57,6 +60,11 @@ public class UserController {
         AccountStatus status = AccountStatus.valueOf(statusUpdate.get("status"));
         userService.changeAccountStatus(id, status);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/audit-logs")
+    public ResponseEntity<List<com.sparktech.happyendings.model.ActionLog>> getAuditLogs() {
+        return ResponseEntity.ok(actionLogService.getAllLogs());
     }
 
     private UserDto convertToDto(User user) {
