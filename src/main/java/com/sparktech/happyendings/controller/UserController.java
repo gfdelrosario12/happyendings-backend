@@ -1,20 +1,16 @@
 package com.sparktech.happyendings.controller;
 
-import com.sparktech.happyendings.dto.ApiResponse;
 import com.sparktech.happyendings.dto.UserDto;
 import com.sparktech.happyendings.model.User;
-import com.sparktech.happyendings.model.ActionLog;
 import com.sparktech.happyendings.model.enums.AccountStatus;
 import com.sparktech.happyendings.service.UserService;
-import com.sparktech.happyendings.service.ActionLogService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -23,98 +19,54 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private ActionLogService actionLogService;
-
     @GetMapping
-    public ResponseEntity<ApiResponse<List<UserDto>>> getAllUsers() {
-        String actorEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        User actor = userService.getUserByEmail(actorEmail)
-                .orElseThrow(() -> new IllegalArgumentException("Actor not found."));
-
-        if (actor.getRole() == null || !actor.getRole().name().equals("ADMIN")) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Only administrators can retrieve the list of users."));
-        }
-
-        List<UserDto> list = userService.getAllUsers().stream().map(u -> {
-            UserDto dto = new UserDto(
-                    u.getId(),
-                    u.getName(),
-                    u.getEmail(),
-                    u.getGender(),
-                    u.getAge(),
-                    u.getRole() != null ? u.getRole().name() : null
-            );
-            dto.setFirstName(u.getFirstName());
-            dto.setLastName(u.getLastName());
-            dto.setPhoneNumber(u.getPhoneNumber());
-            dto.setProfilePhoto(u.getProfilePhoto());
-            dto.setAccountStatus(u.getAccountStatus() != null ? u.getAccountStatus().name() : null);
-            return dto;
-        }).toList();
-
-        return ResponseEntity.ok(ApiResponse.success(list));
+    public List<UserDto> getAllUsers() {
+        return userService.getAllUsers().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 
-    @PutMapping("/profile")
-    public ResponseEntity<ApiResponse<UserDto>> updateProfile(@RequestBody Map<String, String> body) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userService.getUserByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found."));
+    @GetMapping("/{id}")
+    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
+        return userService.getUserById(id)
+                .map(user -> ResponseEntity.ok(convertToDto(user)))
+                .orElse(ResponseEntity.notFound().build());
+    }
 
-        String firstName = body.get("firstName");
-        String lastName = body.get("lastName");
-        String phoneNumber = body.get("phoneNumber");
-        String profilePhoto = body.get("profilePhoto");
+    @GetMapping("/by-email")
+    public ResponseEntity<UserDto> getUserByEmail(@RequestParam String email) {
+        return userService.getUserByEmail(email)
+                .map(user -> ResponseEntity.ok(convertToDto(user)))
+                .orElse(ResponseEntity.notFound().build());
+    }
 
-        User updatedUser = userService.updateUserProfile(user.getId(), firstName, lastName, phoneNumber, profilePhoto);
-
-        UserDto dto = new UserDto(
-                updatedUser.getId(),
-                updatedUser.getName(),
-                updatedUser.getEmail(),
-                updatedUser.getGender(),
-                updatedUser.getAge(),
-                updatedUser.getRole() != null ? updatedUser.getRole().name() : null
+    @PutMapping("/{id}/profile")
+    public ResponseEntity<UserDto> updateUserProfile(@PathVariable Long id, @RequestBody Map<String, String> profileData) {
+        User updatedUser = userService.updateUserProfile(
+                id,
+                profileData.get("firstName"),
+                profileData.get("lastName"),
+                profileData.get("phoneNumber"),
+                profileData.get("profilePhoto")
         );
-        dto.setFirstName(updatedUser.getFirstName());
-        dto.setLastName(updatedUser.getLastName());
-        dto.setPhoneNumber(updatedUser.getPhoneNumber());
-        dto.setProfilePhoto(updatedUser.getProfilePhoto());
-        dto.setAccountStatus(updatedUser.getAccountStatus() != null ? updatedUser.getAccountStatus().name() : null);
-
-        return ResponseEntity.ok(ApiResponse.success(dto));
+        return ResponseEntity.ok(convertToDto(updatedUser));
     }
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<ApiResponse<String>> changeStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
-        String statusStr = body.get("status");
-        AccountStatus status = AccountStatus.valueOf(statusStr.toUpperCase());
-        
-        // Log who did the action
-        String actorEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        User actor = userService.getUserByEmail(actorEmail)
-                .orElseThrow(() -> new IllegalArgumentException("Actor not found."));
-
-        if (!actor.getRole().name().equals("ADMIN")) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Only administrators can suspend or delete user accounts."));
-        }
-
+    public ResponseEntity<Void> changeAccountStatus(@PathVariable Long id, @RequestBody Map<String, String> statusUpdate) {
+        AccountStatus status = AccountStatus.valueOf(statusUpdate.get("status"));
         userService.changeAccountStatus(id, status);
-        return ResponseEntity.ok(ApiResponse.success("User status changed successfully to: " + status));
+        return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/audit-logs")
-    public ResponseEntity<ApiResponse<List<ActionLog>>> getAuditLogs() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userService.getUserByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found."));
-
-        if (!user.getRole().name().equals("ADMIN")) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("Access denied: Admin credentials required."));
-        }
-
-        List<ActionLog> logs = actionLogService.getAllLogs();
-        return ResponseEntity.ok(ApiResponse.success(logs));
+    private UserDto convertToDto(User user) {
+        return new UserDto(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getGender(),
+                user.getAge(),
+                user.getRole() != null ? user.getRole().name() : null
+        );
     }
 }
