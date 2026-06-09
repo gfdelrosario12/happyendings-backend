@@ -22,6 +22,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -124,6 +125,12 @@ public class AuthController {
                     user.getAge(),
                     user.getRole() != null ? user.getRole().name() : null
             );
+            // Enrich with extended user fields
+            userDto.setFirstName(user.getFirstName());
+            userDto.setLastName(user.getLastName());
+            userDto.setPhoneNumber(user.getPhoneNumber());
+            userDto.setProfilePhoto(user.getProfilePhoto());
+            userDto.setAccountStatus(user.getAccountStatus() != null ? user.getAccountStatus().name() : null);
             return ResponseEntity.ok(ApiResponse.success(userDto));
         }
 
@@ -146,5 +153,50 @@ public class AuthController {
         log.info("User logged out successfully");
         
         return ResponseEntity.ok(ApiResponse.success("Logged out successfully"));
+    }
+
+    @PostMapping("/password-reset/request")
+    public ResponseEntity<ApiResponse<String>> requestPasswordReset(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        try {
+            String token = userService.generatePasswordResetToken(email);
+            return ResponseEntity.ok(ApiResponse.success("Password reset link generated. Token: " + token));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/password-reset/reset")
+    public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody Map<String, String> body) {
+        String token = body.get("token");
+        String password = body.get("password");
+        try {
+            userService.resetPassword(token, password);
+            return ResponseEntity.ok(ApiResponse.success("Password has been reset successfully."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/email-verification/request")
+    public ResponseEntity<ApiResponse<String>> requestEmailVerification(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        try {
+            String token = userService.generateEmailVerification(email);
+            return ResponseEntity.ok(ApiResponse.success("Email verification link generated. Token: " + token));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/email-verification/verify")
+    public ResponseEntity<ApiResponse<String>> verifyEmail(@RequestBody Map<String, String> body) {
+        String token = body.get("token");
+        try {
+            userService.verifyEmail(token);
+            return ResponseEntity.ok(ApiResponse.success("Email address verified successfully."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(e.getMessage()));
+        }
     }
 }

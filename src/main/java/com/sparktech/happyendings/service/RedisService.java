@@ -137,4 +137,33 @@ public class RedisService {
             return false;
         }
     }
+
+    public boolean acquireLock(String lockKey, long expireSeconds) {
+        try {
+            if (redisTemplate != null) {
+                Boolean success = redisTemplate.opsForValue().setIfAbsent(lockKey, "locked", expireSeconds, TimeUnit.SECONDS);
+                return Boolean.TRUE.equals(success);
+            } else {
+                if (localCache.containsKey(lockKey)) {
+                    Long expiry = localExpiry.get(lockKey);
+                    if (expiry != null && expiry < System.currentTimeMillis()) {
+                        localCache.remove(lockKey);
+                        localExpiry.remove(lockKey);
+                    } else {
+                        return false;
+                    }
+                }
+                localCache.put(lockKey, "locked");
+                localExpiry.put(lockKey, System.currentTimeMillis() + (expireSeconds * 1000));
+                return true;
+            }
+        } catch (Exception e) {
+            log.error("Failed to acquire lock for key: {}", lockKey, e);
+            return false;
+        }
+    }
+
+    public void releaseLock(String lockKey) {
+        delete(lockKey);
+    }
 }

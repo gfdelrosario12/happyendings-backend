@@ -4,6 +4,7 @@ import com.sparktech.happyendings.model.ActionLog;
 import com.sparktech.happyendings.repository.ActionLogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 public class ActionLogService {
@@ -14,5 +15,9 @@ public class ActionLogService {
     public void logAction(Long userId, String actionType, String details) {
         ActionLog log = new ActionLog(userId, actionType, details);
         actionLogRepository.save(log);
+    }
+
+    public List<ActionLog> getAllLogs() {
+        return actionLogRepository.findAll();
     }
 }

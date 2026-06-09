@@ -50,4 +50,15 @@ public class RSVPController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error("Failed to submit RSVP"));
         }
     }
+
+    @PostMapping("/rsvp/auth")
+    public ResponseEntity<ApiResponse<com.sparktech.happyendings.dto.AuthResponse>> authGuestToken(@RequestBody java.util.Map<String, String> body) {
+        String token = body.get("token");
+        try {
+            String guestJwt = rsvpService.authenticateGuestToken(token);
+            return ResponseEntity.ok(ApiResponse.success(new com.sparktech.happyendings.dto.AuthResponse(guestJwt)));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error(e.getMessage()));
+        }
+    }
 }

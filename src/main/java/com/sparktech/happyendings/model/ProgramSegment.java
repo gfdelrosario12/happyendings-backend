@@ -11,69 +11,59 @@ public class ProgramSegment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "invitation_id", insertable = false, updatable = false)
+    private Long invitationId;
     private String title;
     private String description;
     private LocalTime startTime;
     private Integer duration;
     private int orderIndex;
+    private String visibility = "PUBLIC"; // PUBLIC, PRIVATE, COORDINATOR_ONLY
+    private Long createdBy;
+    private Long updatedBy;
+    private Long parentId; // For nested sections/group segments
+    private boolean published = true;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "program_segment_id")
     private List<AssignedPerson> assignedPersons;
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Long getInvitationId() { return invitationId; }
+    public void setInvitationId(Long invitationId) { this.invitationId = invitationId; }
 
-    public String getTitle() {
-        return title;
-    }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public String getDescription() {
-        return description;
-    }
+    public LocalTime getStartTime() { return startTime; }
+    public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public Integer getDuration() { return duration; }
+    public void setDuration(Integer duration) { this.duration = duration; }
 
-    public LocalTime getStartTime() {
-        return startTime;
-    }
+    public int getOrderIndex() { return orderIndex; }
+    public void setOrderIndex(int orderIndex) { this.orderIndex = orderIndex; }
 
-    public void setStartTime(LocalTime startTime) {
-        this.startTime = startTime;
-    }
+    public String getVisibility() { return visibility; }
+    public void setVisibility(String visibility) { this.visibility = visibility; }
 
-    public Integer getDuration() {
-        return duration;
-    }
+    public Long getCreatedBy() { return createdBy; }
+    public void setCreatedBy(Long createdBy) { this.createdBy = createdBy; }
 
-    public void setDuration(Integer duration) {
-        this.duration = duration;
-    }
+    public Long getUpdatedBy() { return updatedBy; }
+    public void setUpdatedBy(Long updatedBy) { this.updatedBy = updatedBy; }
 
-    public int getOrderIndex() {
-        return orderIndex;
-    }
+    public Long getParentId() { return parentId; }
+    public void setParentId(Long parentId) { this.parentId = parentId; }
 
-    public void setOrderIndex(int orderIndex) {
-        this.orderIndex = orderIndex;
-    }
+    public boolean isPublished() { return published; }
+    public void setPublished(boolean published) { this.published = published; }
 
-    public List<AssignedPerson> getAssignedPersons() {
-        return assignedPersons;
-    }
-
-    public void setAssignedPersons(List<AssignedPerson> assignedPersons) {
-        this.assignedPersons = assignedPersons;
-    }
+    public List<AssignedPerson> getAssignedPersons() { return assignedPersons; }
+    public void setAssignedPersons(List<AssignedPerson> assignedPersons) { this.assignedPersons = assignedPersons; }
 }

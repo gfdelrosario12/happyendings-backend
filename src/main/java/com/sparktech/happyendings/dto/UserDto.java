@@ -7,6 +7,12 @@ public class UserDto {
     private String gender;
     private int age;
     private String role;
+    
+    private String firstName;
+    private String lastName;
+    private String phoneNumber;
+    private String profilePhoto;
+    private String accountStatus;
 
     public UserDto(Long id, String name, String email, String gender, int age, String role) {
         this.id = id;
@@ -30,4 +36,15 @@ public class UserDto {
     public void setAge(int age) { this.age = age; }
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+    public String getProfilePhoto() { return profilePhoto; }
+    public void setProfilePhoto(String profilePhoto) { this.profilePhoto = profilePhoto; }
+    public String getAccountStatus() { return accountStatus; }
+    public void setAccountStatus(String accountStatus) { this.accountStatus = accountStatus; }
 }

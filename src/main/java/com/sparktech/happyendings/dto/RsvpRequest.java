@@ -7,6 +7,10 @@ public class RsvpRequest {
     private RsvpStatus status;
     private String additionalNotes;
 
+    private int attendanceCount;
+    private String plusOneName;
+    private String dietaryRestrictions;
+
     public RsvpRequest() {}
 
     public RsvpRequest(Long guestId, RsvpStatus status, String additionalNotes) {
@@ -37,5 +41,29 @@ public class RsvpRequest {
 
     public void setAdditionalNotes(String additionalNotes) {
         this.additionalNotes = additionalNotes;
+    }
+
+    public int getAttendanceCount() {
+        return attendanceCount;
+    }
+
+    public void setAttendanceCount(int attendanceCount) {
+        this.attendanceCount = attendanceCount;
+    }
+
+    public String getPlusOneName() {
+        return plusOneName;
+    }
+
+    public void setPlusOneName(String plusOneName) {
+        this.plusOneName = plusOneName;
+    }
+
+    public String getDietaryRestrictions() {
+        return dietaryRestrictions;
+    }
+
+    public void setDietaryRestrictions(String dietaryRestrictions) {
+        this.dietaryRestrictions = dietaryRestrictions;
     }
 }
