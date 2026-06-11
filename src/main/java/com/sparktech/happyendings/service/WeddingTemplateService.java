@@ -66,7 +66,7 @@ public class WeddingTemplateService {
         clone.setPreviewImageUrl(source.getPreviewImageUrl());
         clone.setCategory(source.getCategory());
         clone.setTags(source.getTags());
-        clone.setVersion("1.0.0-clone");
+        clone.setTemplateVersion("1.0.0-clone"); // Use the new field
         clone.setStatus("ACTIVE");
         clone.setClonedFromId(templateId);
         clone.setPublishedAt(LocalDateTime.now());

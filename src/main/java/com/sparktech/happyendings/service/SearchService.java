@@ -1,6 +1,7 @@
 package com.sparktech.happyendings.service;
 
 import com.sparktech.happyendings.dto.SearchResult;
+import com.sparktech.happyendings.dto.UserDto;
 import com.sparktech.happyendings.model.Guest;
 import com.sparktech.happyendings.model.Invitation;
 import com.sparktech.happyendings.model.User;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class SearchService {
@@ -32,6 +34,10 @@ public class SearchService {
                 .setMaxResults(20)
                 .getResultList();
 
+        List<UserDto> userDtos = users.stream()
+                .map(user -> new UserDto(user.getId(), user.getName(), user.getEmail(), user.getGender(), user.getAge(), user.getRole().name()))
+                .collect(Collectors.toList());
+
         List<Invitation> invitations = entityManager.createQuery(
                 "SELECT i FROM Invitation i WHERE i.deleted = false AND (LOWER(i.title) LIKE :kw OR LOWER(i.slug) LIKE :kw OR LOWER(i.theme) LIKE :kw)", Invitation.class)
                 .setParameter("kw", likeKeyword)
@@ -50,6 +56,6 @@ public class SearchService {
                 .setMaxResults(20)
                 .getResultList();
 
-        return new SearchResult(users, invitations, guests, templates);
+        return new SearchResult(userDtos, invitations, guests, templates);
     }
 }

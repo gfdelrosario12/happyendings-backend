@@ -11,50 +11,112 @@ public class WeddingTemplate {
     private Long id;
 
     private String name;
+    private String tags;
+    private String category;
     private String description;
     private String previewImageUrl;
-    private String category; // e.g. Classic, Modern, Rustic
-    private String tags; // Comma-separated tags e.g. "floral, elegant, clean"
-    private String version = "1.0.0";
-    private String status = "ACTIVE"; // ACTIVE, DEPRECATED, DRAFT
+    private String status;
+    private LocalDateTime publishedAt;
     private Long clonedFromId;
-    private int favoritesCount = 0;
-    private int viewsCount = 0;
-    private LocalDateTime publishedAt = LocalDateTime.now();
+    private long favoritesCount;
+    private String templateVersion; // For semantic versioning like "1.0.0"
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    @Version
+    private Long version; // For JPA Optimistic Locking
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getPreviewImageUrl() { return previewImageUrl; }
-    public void setPreviewImageUrl(String previewImageUrl) { this.previewImageUrl = previewImageUrl; }
+    public String getName() {
+        return name;
+    }
 
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public String getTags() { return tags; }
-    public void setTags(String tags) { this.tags = tags; }
+    public String getTags() {
+        return tags;
+    }
 
-    public String getVersion() { return version; }
-    public void setVersion(String version) { this.version = version; }
+    public void setTags(String tags) {
+        this.tags = tags;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public String getCategory() {
+        return category;
+    }
 
-    public Long getClonedFromId() { return clonedFromId; }
-    public void setClonedFromId(Long clonedFromId) { this.clonedFromId = clonedFromId; }
+    public void setCategory(String category) {
+        this.category = category;
+    }
 
-    public int getFavoritesCount() { return favoritesCount; }
-    public void setFavoritesCount(int favoritesCount) { this.favoritesCount = favoritesCount; }
+    public String getDescription() {
+        return description;
+    }
 
-    public int getViewsCount() { return viewsCount; }
-    public void setViewsCount(int viewsCount) { this.viewsCount = viewsCount; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public LocalDateTime getPublishedAt() { return publishedAt; }
-    public void setPublishedAt(LocalDateTime publishedAt) { this.publishedAt = publishedAt; }
+    public String getPreviewImageUrl() {
+        return previewImageUrl;
+    }
+
+    public void setPreviewImageUrl(String previewImageUrl) {
+        this.previewImageUrl = previewImageUrl;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getPublishedAt() {
+        return publishedAt;
+    }
+
+    public void setPublishedAt(LocalDateTime publishedAt) {
+        this.publishedAt = publishedAt;
+    }
+
+    public Long getClonedFromId() {
+        return clonedFromId;
+    }
+
+    public void setClonedFromId(Long clonedFromId) {
+        this.clonedFromId = clonedFromId;
+    }
+
+    public long getFavoritesCount() {
+        return favoritesCount;
+    }
+
+    public void setFavoritesCount(long favoritesCount) {
+        this.favoritesCount = favoritesCount;
+    }
+
+    public String getTemplateVersion() {
+        return templateVersion;
+    }
+
+    public void setTemplateVersion(String templateVersion) {
+        this.templateVersion = templateVersion;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
 }
