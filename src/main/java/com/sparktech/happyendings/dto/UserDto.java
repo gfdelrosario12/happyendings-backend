@@ -14,6 +14,8 @@ public class UserDto {
     private String profilePhoto;
     private String accountStatus;
 
+    public UserDto() {}
+
     public UserDto(Long id, String name, String email, String gender, int age, String role) {
         this.id = id;
         this.name = name;
@@ -21,6 +23,20 @@ public class UserDto {
         this.gender = gender;
         this.age = age;
         this.role = role;
+    }
+
+    public UserDto(Long id, String name, String email, String gender, int age, String role, String firstName, String lastName, String phoneNumber, String profilePhoto, String accountStatus) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.gender = gender;
+        this.age = age;
+        this.role = role;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.phoneNumber = phoneNumber;
+        this.profilePhoto = profilePhoto;
+        this.accountStatus = accountStatus;
     }
 
     // Getters and setters

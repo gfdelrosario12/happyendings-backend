@@ -35,7 +35,19 @@ public class SearchService {
                 .getResultList();
 
         List<UserDto> userDtos = users.stream()
-                .map(user -> new UserDto(user.getId(), user.getName(), user.getEmail(), user.getGender(), user.getAge(), user.getRole().name()))
+                .map(user -> new UserDto(
+                        user.getId(),
+                        user.getName(),
+                        user.getEmail(),
+                        user.getGender(),
+                        user.getAge(),
+                        user.getRole() != null ? user.getRole().name() : null,
+                        user.getFirstName(),
+                        user.getLastName(),
+                        user.getPhoneNumber(),
+                        user.getProfilePhoto(),
+                        user.getAccountStatus() != null ? user.getAccountStatus().name() : null
+                ))
                 .collect(Collectors.toList());
 
         List<Invitation> invitations = entityManager.createQuery(

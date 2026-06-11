@@ -82,7 +82,12 @@ public class AuthController {
                     newUser.getEmail(),
                     newUser.getGender(),
                     newUser.getAge(),
-                    newUser.getRole() != null ? newUser.getRole().name() : null
+                    newUser.getRole() != null ? newUser.getRole().name() : null,
+                    newUser.getFirstName(),
+                    newUser.getLastName(),
+                    newUser.getPhoneNumber(),
+                    newUser.getProfilePhoto(),
+                    newUser.getAccountStatus() != null ? newUser.getAccountStatus().name() : null
             );
             
             log.info("Registration successful for email: {}", registerRequest.getEmail());
@@ -123,14 +128,13 @@ public class AuthController {
                     user.getEmail(),
                     user.getGender(),
                     user.getAge(),
-                    user.getRole() != null ? user.getRole().name() : null
+                    user.getRole() != null ? user.getRole().name() : null,
+                    user.getFirstName(),
+                    user.getLastName(),
+                    user.getPhoneNumber(),
+                    user.getProfilePhoto(),
+                    user.getAccountStatus() != null ? user.getAccountStatus().name() : null
             );
-            // Enrich with extended user fields
-            userDto.setFirstName(user.getFirstName());
-            userDto.setLastName(user.getLastName());
-            userDto.setPhoneNumber(user.getPhoneNumber());
-            userDto.setProfilePhoto(user.getProfilePhoto());
-            userDto.setAccountStatus(user.getAccountStatus() != null ? user.getAccountStatus().name() : null);
             return ResponseEntity.ok(ApiResponse.success(userDto));
         }
 

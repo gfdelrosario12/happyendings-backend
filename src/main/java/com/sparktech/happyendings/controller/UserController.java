@@ -74,7 +74,12 @@ public class UserController {
                 user.getEmail(),
                 user.getGender(),
                 user.getAge(),
-                user.getRole() != null ? user.getRole().name() : null
+                user.getRole() != null ? user.getRole().name() : null,
+                user.getFirstName(),
+                user.getLastName(),
+                user.getPhoneNumber(),
+                user.getProfilePhoto(),
+                user.getAccountStatus() != null ? user.getAccountStatus().name() : null
         );
     }
 }
